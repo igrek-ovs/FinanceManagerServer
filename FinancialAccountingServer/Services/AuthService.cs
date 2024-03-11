@@ -95,7 +95,7 @@ namespace FinancialAccountingServer.Services
 
         public async Task<string> GenerateAccessToken(UserDTO userDTO)
         {
-            var userRole = _userRepository.GetRoleByUserName(userDTO.Username);
+            var userRole = await _userRepository.GetRoleByUserName(userDTO.Username);
 
             var claims = new List<Claim>
             {
