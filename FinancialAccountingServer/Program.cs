@@ -24,6 +24,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<IBlobService, BlobService>();
+builder.Services.AddScoped<IGroupRepository, GroupRepository>();
 
 builder.Services.AddSwaggerGen(c =>
 {

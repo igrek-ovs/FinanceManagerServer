@@ -15,5 +15,8 @@ namespace FinancialAccountingServer.models
         public string Role { get; set; } = "Client";
 
         public string? AvatarPath { get; set; }
+
+        public ICollection<GroupMembership> Memberships { get; set; }
+        //public ICollection<ExpenseCategory> ExpenseCategories { get; set; }
     }
 }
