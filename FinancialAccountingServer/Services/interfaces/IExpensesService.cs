@@ -26,5 +26,7 @@ namespace FinancialAccountingServer.Services.interfaces
         Task<ExpenseDTO> AddExpense(AddExpenseDTO expense);
 
         Task<bool> CanUserModifyExpense(int userId, int expenseId);
+
+        Task<bool> IsUserGroupAdmin(int userId, int groupId);
     }
 }
