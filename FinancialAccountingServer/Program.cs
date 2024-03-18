@@ -27,6 +27,7 @@ builder.Services.AddScoped<IBlobService, BlobService>();
 builder.Services.AddScoped<IGroupRepository, GroupRepository>();
 builder.Services.AddScoped<IMemberRepository, MemberRepository>();
 builder.Services.AddScoped<IExpensesService, ExpensesService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
 
 builder.Services.AddSwaggerGen(c =>
 {
