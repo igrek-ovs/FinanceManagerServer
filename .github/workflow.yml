@@ -1,1 +1,72 @@
+name: Build Test Coverage
 
+on:
+  push:
+    branches:
+      - master
+
+  pull_request:
+    branches:
+      - master
+
+  workflow_dispatch:
+
+jobs:
+  build-and-test-dotnet:
+    name: Build Test Coverage
+    runs-on: ${{ matrix.environment }}
+    strategy:
+      matrix:
+        environment:
+          - ubuntu-latest
+
+    env:
+      DOTNET_NOLOGO: 1
+      DOTNET_CLI_TELEMETRY_OPTOUT: 1
+      NUGET_PACKAGES: ${{ github.workspace }}/.github/nuget-packages
+
+    steps:
+      - name: Fetch Sources
+        uses: actions/checkout@v2
+
+      - name: Setup .NET 8.0 SDK
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 8.0.x
+
+      - name: NuGet Cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.NUGET_PACKAGES }}
+          key: ${{ runner.os }}.nuget.${{ hashFiles('**/*.csproj') }}
+
+      - name: Restore Nuget Packages
+        run: dotnet restore
+
+      - name: Build .NET Project
+        run: |
+          dotnet build --configuration Release
+
+      - name: Publish .NET Project
+        run: |
+          dotnet publish "FinancialAccountingServer/FinancialAccountingServer.csproj" -c Release -o src/FinManagerService
+
+      - name: Create zip archive
+        run: |
+          cd src/FinManagerService
+          zip -r fin-manager-artifact.zip .
+          ls -l
+
+      - name: Azure sign in
+        uses: azure/login@v1
+        with: 
+          creds: ${{ secrets.SP_CREDENTIALS }}
+
+      - name: Azure CLI Deploy
+        uses: azure/CLI@v1
+        with:
+          azcliversion: 2.57.0
+          inlineScript: |
+            ls -l
+            cd src/FinManagerService
+            az webapp deployment source config-zip --resource-group "finance-manager-rg" --src ./fin-manager-artifact.zip --name "fin-manager"
