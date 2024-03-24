@@ -109,11 +109,18 @@ namespace FinancialAccountingServer.repositories
             return true;
         }
 
-        public async Task<bool> EnterGroupAsync(string groupName, string password, int userId)
+        /// <summary>
+        /// This method can be used when user trying to enter (or re-enter some group)
+        /// </summary>
+        /// <param name="groupName"></param>
+        /// <param name="password"></param>
+        /// <param name="userId">User, that is trying to enter a group</param>
+        /// <returns>ID of group, which entered. Or it can return -1 if entering failed</returns>
+        public async Task<int> EnterGroupAsync(string groupName, string password, int userId)
         {
             var group = await _context.Groups.FirstOrDefaultAsync(g => g.Name == groupName);
             if (group == null)
-                return false;
+                return -1;
 
             var computedHash = HashPassword(password, group.PasswordSalt);
             if (computedHash == group.PasswordHash)
@@ -121,16 +128,16 @@ namespace FinancialAccountingServer.repositories
                 var existingMembership = await _context.GroupMembers.FirstOrDefaultAsync(gm => gm.UserId == userId && gm.GroupId == group.Id);
                 if (existingMembership != null)
                 {
-                    return true;
+                    return group.Id;
                 }
 
                 _context.GroupMembers.Add(new GroupMembership { UserId = userId, GroupId = group.Id, IsAdmin = false });
                 await _context.SaveChangesAsync();
 
-                return true;
+                return group.Id;
             }
 
-            return false;
+            return -1;
         }
     }
 }
