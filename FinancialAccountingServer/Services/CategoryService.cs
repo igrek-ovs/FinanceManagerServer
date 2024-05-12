@@ -38,7 +38,7 @@ namespace FinancialAccountingServer.Services
                 .Where(c=>c.GroupId == groupId)
                 .Select(c => new CategoryDTO
                 {
-                    Id = c.GroupId,
+                    Id = c.Id,
                     Name = c.Name,
                     Description = c.Description,
                     GroupId= groupId
@@ -56,6 +56,7 @@ namespace FinancialAccountingServer.Services
             
             _context.Categories.Remove(category);
 
+            await _context.SaveChangesAsync();
             return true;
         }
     }

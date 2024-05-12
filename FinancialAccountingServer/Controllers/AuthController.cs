@@ -68,6 +68,13 @@ namespace FinancialAccountingServer.Controllers
             return Ok(response);
         }
 
+        [HttpGet("get-user-info/{userId}")]
+        public async Task<IActionResult> GetUserInfo(int userId)
+        {
+            var response = await _authService.GetUserInfo(userId);
+            return Ok(response);
+        }
+
         [HttpPost("add-avatar/{userId}")]
         public async Task<IActionResult> AddAvatarToUser(int userId, [FromBody] string imagePath)
         {

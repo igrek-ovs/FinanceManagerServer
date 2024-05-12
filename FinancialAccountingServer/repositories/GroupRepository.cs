@@ -122,6 +122,11 @@ namespace FinancialAccountingServer.repositories
             if (group == null)
                 return -1;
 
+            var groupMember = await _context.GroupMembers.Where(g => g.GroupId == group.Id && g.UserId == userId)
+                .FirstOrDefaultAsync();
+            if (groupMember != null)
+                return -1;
+
             var computedHash = HashPassword(password, group.PasswordSalt);
             if (computedHash == group.PasswordHash)
             {

@@ -23,13 +23,15 @@ namespace FinancialAccountingServer.repositories
         public async Task<List<MemberDTO>> GetGroupMembersAsync(int groupId)
         {
             return await _financialAppContext.GroupMembers
-                .Where(gm => gm.GroupId == groupId)
+                .Where(gm => gm.GroupId == groupId && gm.isBlocked == false)
                 .Select(gm => new MemberDTO
                 {
                     Id = gm.UserId,
                     Username = gm.User.Username,
                     AvatarPath = gm.User.AvatarPath,
-                    IsAdmin = gm.IsAdmin
+                    IsAdmin = gm.IsAdmin,
+                    FirstName = gm.User.FirstName,
+                    LastName = gm.User.LastName
                 })
                 .ToListAsync();
         }
@@ -37,7 +39,7 @@ namespace FinancialAccountingServer.repositories
         public async Task<MemberDTO> GetGroupMembershipAsync(int groupId, int userId)
         {
             var memberDto = await _financialAppContext.GroupMembers
-                .Where(gm => gm.GroupId == groupId && gm.UserId == userId)
+                .Where(gm => gm.GroupId == groupId && gm.UserId == userId && gm.isBlocked == false)
                 .Select(gm => new MemberDTO
                 {
                     Id = gm.UserId,
@@ -55,12 +57,12 @@ namespace FinancialAccountingServer.repositories
             return membership != null && membership.IsAdmin;
         }
 
-        public async Task<bool> RemoveMemberFromGroupAsync(int groupId, int userId)
+        public async Task<bool> ToggleMemberBlockStatusAsync(int groupId, int userId)
         {
             var membership = await _financialAppContext.GroupMembers.FirstOrDefaultAsync(gm => gm.GroupId == groupId && gm.UserId == userId);
             if (membership != null)
             {
-                _financialAppContext.GroupMembers.Remove(membership);
+                membership.isBlocked = !membership.isBlocked;
                 await _financialAppContext.SaveChangesAsync();
                 return true;
             }

@@ -7,7 +7,7 @@ namespace FinancialAccountingServer.repositories.interfaces
     {
         Task<List<GroupMembership>> GetAllMembersAsync();
 
-        Task<bool> RemoveMemberFromGroupAsync(int groupId, int userId);
+        Task<bool> ToggleMemberBlockStatusAsync(int groupId, int userId);
 
         Task<bool> IsMemberAdminForGroup(int groupId, int userId);
 

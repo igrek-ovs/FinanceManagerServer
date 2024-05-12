@@ -24,5 +24,7 @@ namespace FinancialAccountingServer.Services.interfaces
         Task<string> GetAvatarOfUser(int userId);
 
         Task<bool> DeleteAvatarOfUser(int userId);
+
+        Task<UserInfoDTO> GetUserInfo(int userId);
     }
 }

@@ -85,7 +85,9 @@ namespace FinancialAccountingServer.Services
             {
                 Username = userDTO.Username,
                 PasswordHash = passwordHash,
-                PasswordSalt = passwordSalt
+                PasswordSalt = passwordSalt,
+                FirstName = userDTO.FirstName,
+                LastName = userDTO.LastName
             };
 
             await _userRepository.AddUser(newUser);
@@ -203,6 +205,18 @@ namespace FinancialAccountingServer.Services
             user.AvatarPath = null;
 
             return await Save();
+        }
+
+        public async Task<UserInfoDTO> GetUserInfo(int userId)
+        {
+            var user = await _userRepository.GetUserById(userId);
+
+            return new UserInfoDTO
+            {
+                Username = user.Username,
+                FirstName = user.FirstName,
+                LastName = user.LastName
+            };
         }
     }
 }
