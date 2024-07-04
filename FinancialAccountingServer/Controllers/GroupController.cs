@@ -68,5 +68,12 @@ namespace FinancialAccountingServer.Controllers
             var success = await _groupRepository.EnterGroupAsync(groupName, password, userId);
             return Ok(success);
         }
+
+        [HttpGet("get-group-name")]
+        public async Task<ActionResult> GetGroupNameByIdAsync(int groupId)
+        {
+            var name = await _groupRepository.GetGroupNameAsync(groupId);
+            return Ok(name);
+        }
     }
 }

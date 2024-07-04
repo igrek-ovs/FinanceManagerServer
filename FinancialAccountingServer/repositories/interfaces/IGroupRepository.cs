@@ -12,5 +12,6 @@ namespace FinancialAccountingServer.repositories.interfaces
         Task<bool> RemoveGroupAsync(int groupId);
         Task<bool> UpdateGroupNameAsync(int groupId, string newName);
         Task<int> EnterGroupAsync(string groupName, string password, int userId);
+        Task<string> GetGroupNameAsync(int groupId);
     }
 }

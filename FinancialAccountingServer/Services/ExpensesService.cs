@@ -128,6 +128,58 @@ namespace FinancialAccountingServer.Services
                 .ToListAsync();
         }
 
+        public async Task<List<ExpenseDTO>> GetAllExpensesForUserByFilter(int groupId, int userId, ExpenseFilterDTO filter)
+        {
+            var query = _financialAppContext.Expenses
+                    .Include(exp => exp.User)
+                    .Include(exp => exp.Category)
+                    .Where(exp => exp.GroupId == groupId && exp.User.Id == userId)
+                    .AsQueryable();
+
+            if(!string.IsNullOrEmpty(filter.Amount))
+            {
+                if(filter.Amount == "desc")
+                {
+                    query = query.OrderByDescending(exp => exp.Amount);
+                }
+                else if (filter.Amount == "asc")
+                {
+                    query = query.OrderBy(exp => exp.Amount);
+                }
+            }
+
+            if (filter.CategoryId.HasValue)
+            {
+                query = query.Where(exp => exp.CategoryId == filter.CategoryId.Value);
+            }
+
+            if (!string.IsNullOrEmpty(filter.Date))
+            {
+                if (filter.Date == "desc")
+                {
+                    query = query.OrderByDescending(exp => exp.CreatedAt);
+                }
+                else if (filter.Date == "asc")
+                {
+                    query = query.OrderBy(exp => exp.CreatedAt);
+                }
+            }
+
+            return await query
+                    .Select(exp => new ExpenseDTO
+                    {
+                        Id = exp.Id,
+                        Description = exp.Description,
+                        Amount = exp.Amount,
+                        CreatedAt = exp.CreatedAt,
+                        UserId = exp.UserId,
+                        UserName = exp.User.Username,
+                        CategoryId = exp.CategoryId,
+                        CategoryName = exp.Category.Name
+                    })
+                    .ToListAsync();
+        }
+
         public async Task<Dictionary<string, List<ExpenseDTO>>> GetAllExpensesGroupedByUser(int groupId)
         {
             var expensesGroupedByUser = await _financialAppContext.Expenses
@@ -177,7 +229,7 @@ namespace FinancialAccountingServer.Services
         public async Task<bool> RemoveExpense(int expenseId)
         {
             var expense = await _financialAppContext.Expenses.FirstOrDefaultAsync(exp => exp.Id == expenseId);
-            if(expense == null)
+            if (expense == null)
             {
                 return false;
             }
@@ -235,6 +287,119 @@ namespace FinancialAccountingServer.Services
             return true;
         }
 
+        public async Task<List<UserExpenseStatisticDTO>> GetUserExpensesStatistic(int groupId)
+        {
+            try
+            {
+                var members = await _financialAppContext.GroupMembers
+                    .Include(m => m.User)
+                    .Include(m => m.Group)
+                    .Where(m => m.GroupId == groupId)
+                    .ToListAsync();
 
+                var statistics = new List<UserExpenseStatisticDTO>();
+
+                foreach (var member in members)
+                {
+                    try
+                    {
+                        var lastMonthExpenses = await CalculateLastMonthExpensesAsync(member.UserId, groupId);
+                        var lastWeekExpenses = await CalculateLastWeekExpensesAsync(member.UserId, groupId);
+                        var avgDayExpenses = await CalculateAverageDayExpensesAsync(member.UserId, groupId);
+                        var totalExpenses = await CalculateTotalExpensesAsync(member.UserId, groupId);
+                        var mostPopularCategory = await FindMostPopularCategoryAsync(member.UserId, groupId);
+
+                        var statistic = new UserExpenseStatisticDTO
+                        {
+                            UserId = member.UserId,
+                            FirstName = member.User?.FirstName ?? "Unknown",
+                            LastName = member.User?.LastName ?? "Unknown",
+                            LastMonthExpenses = lastMonthExpenses,
+                            LastWeekExpenses = lastWeekExpenses,
+                            AvgDayExpenses = avgDayExpenses,
+                            TotalExpenses = totalExpenses,
+                            MostPopularCategory = mostPopularCategory
+                        };
+
+                        statistics.Add(statistic);
+                    }
+                    catch (Exception ex)
+                    {
+                        statistics.Add(new UserExpenseStatisticDTO
+                        {
+                            UserId = member.UserId,
+                            FirstName = "Error",
+                            LastName = "Error",
+                            LastMonthExpenses = 0,
+                            LastWeekExpenses = 0,
+                            AvgDayExpenses = 0,
+                            TotalExpenses = 0,
+                            MostPopularCategory = "Error"
+                        });
+                    }
+                }
+
+                return statistics;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+
+
+        private async Task<double> CalculateLastMonthExpensesAsync(int userId, int groupId)
+        {
+            var startDate = DateTime.Now.AddDays(-30);
+
+            var result = await _financialAppContext.Expenses
+                .Where(e => e.UserId == userId && e.GroupId == groupId && e.CreatedAt >= startDate)
+                .SumAsync(e => e.Amount);
+
+            return result;
+        }
+
+        private async Task<double> CalculateLastWeekExpensesAsync(int userId, int groupId)
+        {
+            var startDate = DateTime.Now.AddDays(-7);
+
+            var result = await _financialAppContext.Expenses
+                .Where(e => e.UserId == userId && e.GroupId == groupId && e.CreatedAt >= startDate)
+                .SumAsync(e => e.Amount);
+
+            return result;
+        }
+
+        private async Task<double> CalculateAverageDayExpensesAsync(int userId, int groupId)
+        {
+            var totalDays = (DateTime.Now - DateTime.Now.AddDays(-30)).TotalDays;
+            var lastMonthExpenses = await CalculateLastMonthExpensesAsync(userId, groupId);
+
+            var result = lastMonthExpenses / totalDays;
+
+            return result;
+        }
+
+        private async Task<double> CalculateTotalExpensesAsync(int userId, int groupId)
+        {
+            var result = await _financialAppContext.Expenses
+                .Where(e => e.UserId == userId && e.GroupId == groupId)
+                .SumAsync(e => e.Amount);
+
+            return result;
+        }
+
+        private async Task<string> FindMostPopularCategoryAsync(int userId, int groupId)
+        {
+            var result = await _financialAppContext.Expenses
+                .Where(e => e.UserId == userId && e.GroupId == groupId)
+                .GroupBy(e => e.Category)
+                .OrderByDescending(g => g.Count())
+                .Select(g => g.Key.Name)
+                .FirstOrDefaultAsync();
+
+            return result;
+        }
     }
 }

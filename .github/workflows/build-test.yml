@@ -3,11 +3,11 @@ name: Build Test Coverage
 on:
   push:
     branches:
-      - master
+      ##- master
 
   pull_request:
     branches:
-      - master
+      ##- master
 
   workflow_dispatch:
 

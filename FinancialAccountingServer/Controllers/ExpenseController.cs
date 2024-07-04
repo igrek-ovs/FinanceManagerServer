@@ -36,6 +36,13 @@ namespace FinancialAccountingServer.Controllers
             return Ok(expenses);
         }
 
+        [HttpPost("get-filtered-expenses-for-user")]
+        public async Task<ActionResult<List<ExpenseDTO>>> GetFilteredExpensesForUser(int groupId, int userId, ExpenseFilterDTO filter)
+        {
+            var expenses = await _expensesService.GetAllExpensesForUserByFilter(groupId, userId, filter);
+            return Ok(expenses);
+        }
+
         [HttpGet("get-all-expenses-grouped-by-user")]
         public async Task<ActionResult<Dictionary<string, List<ExpenseDTO>>>> GetAllExpensesGroupedByUser(int groupId)
         {
@@ -99,6 +106,13 @@ namespace FinancialAccountingServer.Controllers
                 return NoContent();
             }
             return NotFound();
+        }
+
+        [HttpGet("get-users-with-statistic")]
+        public async Task<ActionResult<List<UserExpenseStatisticDTO>>> GetUserExpensesStatistic(int groupId)
+        {
+            var result = await _expensesService.GetUserExpensesStatistic(groupId);
+            return Ok(result);
         }
     }
 }

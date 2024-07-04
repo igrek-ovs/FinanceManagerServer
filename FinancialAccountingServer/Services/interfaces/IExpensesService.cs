@@ -28,5 +28,9 @@ namespace FinancialAccountingServer.Services.interfaces
         Task<bool> CanUserModifyExpense(int userId, int expenseId);
 
         Task<bool> IsUserGroupAdmin(int userId, int groupId);
+
+        Task<List<UserExpenseStatisticDTO>> GetUserExpensesStatistic(int groupId);
+
+        Task<List<ExpenseDTO>> GetAllExpensesForUserByFilter(int groupId, int userId, ExpenseFilterDTO filter);
     }
 }

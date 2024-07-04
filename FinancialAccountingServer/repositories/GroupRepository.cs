@@ -144,5 +144,11 @@ namespace FinancialAccountingServer.repositories
 
             return -1;
         }
+
+        public async Task<string> GetGroupNameAsync(int groupId)
+        {
+            var group = await _context.Groups.Where(g => g.Id == groupId).FirstOrDefaultAsync();
+            return group.Name;
+        }
     }
 }
